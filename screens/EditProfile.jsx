@@ -5,6 +5,7 @@ import {
   Button,
   Alert,
   ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -100,59 +101,79 @@ const EditProfile = () => {
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
-        <View className="gap-4 mt-4">
-          <TextInput
-            className="border-gray-200 border rounded p-2"
-            placeholder="Enter your name"
-            value={name}
-            onChangeText={setName}
-          />
+        <View style={styles.container} className="gap-4 mt-4">
+          <View style={styles.inputContainer}>
+            <TextInput
+              className="border-gray-200 border rounded p-2"
+              placeholder="Enter your name"
+              value={name}
+              onChangeText={setName}
+            />
 
-          <TextInput
-            className="border-gray-200 border rounded p-2"
-            placeholder="Enter your phone number"
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
-          />
+            <TextInput
+              className="border-gray-200 border rounded p-2"
+              placeholder="Enter your phone number"
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+            />
 
-          <TextInput
-            className="border-gray-200 border rounded p-2"
-            placeholder="Enter your address"
-            value={address}
-            onChangeText={setAddress}
-          />
+            <TextInput
+              className="border-gray-200 border rounded p-2"
+              placeholder="Enter your address"
+              value={address}
+              onChangeText={setAddress}
+            />
 
-          <TextInput
-            className="border-gray-200 border rounded p-2"
-            placeholder="Enter your city"
-            value={city}
-            onChangeText={setCity}
-          />
+            <TextInput
+              className="border-gray-200 border rounded p-2"
+              placeholder="Enter your city"
+              value={city}
+              onChangeText={setCity}
+            />
 
-          <TextInput
-            className="border-gray-200 border rounded p-2"
-            placeholder="Enter your province/state"
-            value={province}
-            onChangeText={setProvince}
-          />
+            <TextInput
+              className="border-gray-200 border rounded p-2"
+              placeholder="Enter your province/state"
+              value={province}
+              onChangeText={setProvince}
+            />
 
-          <TextInput
-            className="border-gray-200 border rounded p-2"
-            placeholder="Enter your country"
-            value={country}
-            onChangeText={setCountry}
-          />
+            <TextInput
+              className="border-gray-200 border rounded p-2"
+              placeholder="Enter your country"
+              value={country}
+              onChangeText={setCountry}
+            />
+          </View>
 
-          <Button
-            title={updating ? "Updating..." : "Save Changes"}
-            onPress={handleUpdateProfile}
-            disabled={updating}
-          />
+          <View style={styles.buttonContainer}>
+            <Button
+              title={updating ? "Updating..." : "Save Changes"}
+              onPress={handleUpdateProfile}
+              disabled={updating}
+              color={"#ffa500"}
+            />
+          </View>
         </View>
       )}
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    marginTop: 10,
+  },
+  inputContainer: {
+    gap: 15,
+  },
+  buttonContainer: {
+    justifyContent: "flex-end",
+    marginTop: "auto",
+    marginBottom: 20,
+  },
+});
 
 export default EditProfile;

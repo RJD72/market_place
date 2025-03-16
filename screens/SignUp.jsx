@@ -137,7 +137,7 @@ const SignUp = ({ navigation }) => {
           onChangeText={setPassword}
         />
 
-        <Button title="Sign Up" onPress={handleSignUp} />
+        <Button title="Sign Up" onPress={handleSignUp} color={"#ffa500"} />
 
         <Text className="text-center">
           Already have an account?{" "}
