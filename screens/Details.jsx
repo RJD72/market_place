@@ -8,19 +8,31 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
-  Platform,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Carousel from "react-native-reanimated-carousel";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from "expo-location";
+import { useEffect, useState } from "react";
+import { auth, db } from "../firebaseConfig";
+import { deleteDoc, doc } from "firebase/firestore";
 
 const { width } = Dimensions.get("window");
 
 const Details = ({ route }) => {
   const { item } = route.params;
   const navigation = useNavigation();
+  const [isOwner, setIsOwner] = useState(false);
+
+  // Check if logged-in user is the owner
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user && item.userId === user.uid) {
+      setIsOwner(true);
+    }
+  }, []);
 
   /** ✅ Handle all possible image cases */
   let images = [];
@@ -68,30 +80,29 @@ const Details = ({ route }) => {
     Linking.openURL(url);
   };
 
-  /** 🗺️ Optional: Get Current Location & Directions */
-  const handleDirectionsClick = async () => {
-    try {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert("Permission denied", "Location permission is required.");
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      const { latitude, longitude } = location.coords;
-      const encodedAddress = encodeURIComponent(item.address);
-
-      // Open Google Maps with current location & destination
-      const url = `https://www.google.com/maps/dir/?api=1&origin=${latitude},${longitude}&destination=${encodedAddress}&travelmode=driving`;
-      Linking.openURL(url);
-    } catch (error) {
-      Alert.alert("Error", "Unable to fetch current location.");
-    }
+  /** 🔥 Handle Deletion */
+  const handleDelete = async () => {
+    Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteDoc(doc(db, "itemsForSale", item.id));
+            Alert.alert("Deleted", "Your post has been deleted.");
+            navigation.goBack(); // Go back after deletion
+          } catch (error) {
+            Alert.alert("Error", "Failed to delete post.");
+          }
+        },
+      },
+    ]);
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1">
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {/* Back Button */}
         <View className="p-3">
           <Ionicons
@@ -129,50 +140,55 @@ const Details = ({ route }) => {
         </View>
 
         {/* Seller Info */}
-        <View className="p-4 mt-10">
-          <Text className="text-2xl font-bold text-gray-800">{item.title}</Text>
+        <View style={styles.contentContainer}>
+          <View>
+            <Text className="text-2xl font-bold text-gray-800">
+              {item.title}
+            </Text>
 
-          {/* Address */}
-          <TouchableOpacity onPress={handleAddressClick}>
-            <Text className="text-gray-500 underline mt-2">{item.address}</Text>
-          </TouchableOpacity>
+            {/* Address */}
+            <TouchableOpacity onPress={handleAddressClick}>
+              <Text className="text-blue-600 underline mt-2">
+                {item.address}
+              </Text>
+            </TouchableOpacity>
 
-          {/* Phone */}
-          <TouchableOpacity onPress={handlePhoneClick}>
-            <Text className="text-blue-600 mt-2 underline">{item.phone}</Text>
-          </TouchableOpacity>
+            {/* Phone */}
+            <TouchableOpacity onPress={handlePhoneClick}>
+              <Text className="text-blue-600 mt-2 underline">{item.phone}</Text>
+            </TouchableOpacity>
 
-          {/* Email */}
-          <TouchableOpacity onPress={handleEmailClick}>
-            <Text className="text-blue-600 mt-2 underline">{item.email}</Text>
-          </TouchableOpacity>
+            {/* Email */}
+            <TouchableOpacity onPress={handleEmailClick}>
+              <Text className="text-blue-600 mt-2 underline">{item.email}</Text>
+            </TouchableOpacity>
 
-          {/* Full Description */}
-          <Text className="mt-4 text-gray-700">{item.description}</Text>
+            {/* Description */}
+            <Text className="mt-4 text-gray-700">{item.description}</Text>
+          </View>
 
-          {/* Contact Buttons */}
-          <View style={{ marginTop: 20, gap: 10 }}>
-            <Button
-              title="Call or Text Seller"
-              onPress={handlePhoneClick}
-              color="#ffa500"
-            />
-            <Button
-              title="Email Seller"
-              onPress={handleEmailClick}
-              color="#000"
-            />
-            <Button title="View Address in Maps" onPress={handleAddressClick} />
-            <Button
-              title="Get Directions"
-              onPress={handleDirectionsClick}
-              color="#555"
-            />
+          {/* Buttons at bottom */}
+          <View style={styles.buttonContainer}>
+            {isOwner && (
+              <Button title="Delete Post" onPress={handleDelete} color="red" />
+            )}
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    flex: 1,
+    justifyContent: "space-between", // Push buttons to bottom
+    padding: 16,
+  },
+  buttonContainer: {
+    marginTop: 20,
+    gap: 10,
+  },
+});
 
 export default Details;

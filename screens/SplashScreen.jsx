@@ -30,7 +30,7 @@ const SplashScreen = () => {
               Marketplace
             </Text>
           </View>
-          <View className="gap-9">
+          <View className="gap-4">
             <View className="w-full">
               <Button
                 title="Log In"

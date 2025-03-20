@@ -170,9 +170,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   buttonContainer: {
-    justifyContent: "flex-end",
     marginTop: "auto",
-    marginBottom: 20,
   },
 });
 

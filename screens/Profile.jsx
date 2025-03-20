@@ -1,45 +1,126 @@
 import {
   View,
   Text,
-  Pressable,
   Button,
   ActivityIndicator,
   StyleSheet,
+  Alert,
+  Image,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { auth, db, signOutUser } from "../firebaseConfig";
-import { useState, useEffect } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { useState, useCallback } from "react";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+} from "firebase/firestore";
 
 const Profile = () => {
   const navigation = useNavigation();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userPosts, setUserPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
+  /** Fetch Profile + Posts Data */
+  const fetchData = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
 
-        const userDocRef = doc(db, "users", user.uid);
-        const userSnapshot = await getDoc(userDocRef);
+      // Profile data
+      const userDocRef = doc(db, "users", user.uid);
+      const userSnapshot = await getDoc(userDocRef);
 
-        if (userSnapshot.exists()) {
-          setUserData(userSnapshot.data());
-        } else {
-          console.log("No user data found!");
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false);
+      if (userSnapshot.exists()) {
+        setUserData(userSnapshot.data());
       }
-    };
 
-    fetchUserData();
-  }, []);
+      // User posts
+      const postsQuery = query(
+        collection(db, "itemsForSale"),
+        where("userId", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(postsQuery);
+      const posts = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUserPosts(posts);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+      setLoadingPosts(false);
+    }
+  };
+
+  /** Refresh on Focus */
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      setLoadingPosts(true);
+      fetchData();
+    }, [])
+  );
+
+  /** Delete a post */
+  const handleDeletePost = async (postId) => {
+    try {
+      await deleteDoc(doc(db, "itemsForSale", postId));
+      setUserPosts((prev) => prev.filter((post) => post.id !== postId));
+      Alert.alert("Deleted", "Post has been deleted.");
+    } catch (error) {
+      Alert.alert("Error", "Failed to delete post.");
+    }
+  };
+
+  /** Render Post Card */
+  const renderPost = ({ item }) => (
+    <View style={styles.postCard}>
+      {item.imageBase64 ? (
+        <Image
+          source={{ uri: item.imageBase64 }}
+          style={styles.postImage}
+          resizeMode="cover"
+        />
+      ) : null}
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontWeight: "bold", marginBottom: 5 }}>
+          {item.title}
+        </Text>
+        <Text>Price: ${item.price}</Text>
+      </View>
+      <View style={styles.postButtons}>
+        <Button
+          title="Edit"
+          color="#ffa500"
+          onPress={() => navigation.navigate("Sell", { post: item })}
+        />
+        <Button
+          title="Delete"
+          color="red"
+          onPress={() =>
+            Alert.alert("Delete Post", "Are you sure?", [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => handleDeletePost(item.id),
+              },
+            ])
+          }
+        />
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -47,8 +128,8 @@ const Profile = () => {
         <ActivityIndicator size="large" color="#0000ff" />
       ) : userData ? (
         <View style={styles.container}>
-          <Text style={styles.heading}>User Profile</Text>
           <View style={styles.profileInfo}>
+            <Text style={styles.heading}>User Profile</Text>
             <Text style={styles.label}>Name:</Text>
             <Text style={styles.value}>{userData.name}</Text>
 
@@ -71,12 +152,30 @@ const Profile = () => {
             <Text style={styles.value}>{userData.email}</Text>
           </View>
 
+          {/* User Posts */}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.postsHeading}>Your Posts</Text>
+
+            {loadingPosts ? (
+              <ActivityIndicator size="small" color="#0000ff" />
+            ) : userPosts.length === 0 ? (
+              <Text style={styles.noData}>You have no posts yet.</Text>
+            ) : (
+              <FlatList
+                data={userPosts}
+                keyExtractor={(item) => item.id}
+                renderItem={renderPost}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              />
+            )}
+          </View>
+
           <View style={styles.buttonContainer}>
             <Button
               title="Edit Profile"
               onPress={() => navigation.navigate("EditProfile")}
               color={"#ffa500"}
-            ></Button>
+            />
 
             <Button
               title="Sign Out"
@@ -101,7 +200,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
     padding: 10,
   },
-
+  container: {
+    flex: 1,
+  },
   heading: {
     fontSize: 24,
     textAlign: "center",
@@ -119,10 +220,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 10,
   },
+  postsHeading: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  postCard: {
+    backgroundColor: "#fff",
+    padding: 10,
+    marginBottom: 10,
+    borderRadius: 5,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  postImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  postButtons: {
+    flexDirection: "column",
+    marginLeft: 10,
+    gap: 6,
+  },
   buttonContainer: {
-    justifyContent: "flex-end",
-    marginTop: "auto",
-    gap: 15,
+    marginTop: 20,
+    gap: 16,
   },
   noData: {
     fontSize: 16,
