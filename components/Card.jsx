@@ -5,20 +5,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Card = ({ item }) => {
   const navigation = useNavigation();
 
-  // Determine which image to display:
   let imageSource = null;
   if (item.images && item.images.length > 0) {
-    imageSource = item.images[0]; // From array
+    imageSource = item.images[0];
   } else if (item.image) {
-    imageSource = item.image; // Single URL or Base64 field
+    imageSource = item.image;
   } else if (item.imageBase64) {
-    imageSource = item.imageBase64; // Base64 field if used
+    imageSource = item.imageBase64;
   }
 
   return (
     <SafeAreaView>
       <View
-        className="bg-white shadow-lg rounded-xl overflow-hidden mx-2 mb-4"
+        className="bg-white shadow-lg rounded-xl overflow-hidden mx-2 "
         style={{ padding: 10 }}
       >
         {/* Image */}

@@ -29,13 +29,11 @@ const Profile = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
-  /** Fetch Profile + Posts Data */
   const fetchData = async () => {
     try {
       const user = auth.currentUser;
       if (!user) return;
 
-      // Profile data
       const userDocRef = doc(db, "users", user.uid);
       const userSnapshot = await getDoc(userDocRef);
 
@@ -43,7 +41,6 @@ const Profile = () => {
         setUserData(userSnapshot.data());
       }
 
-      // User posts
       const postsQuery = query(
         collection(db, "itemsForSale"),
         where("userId", "==", user.uid)
@@ -62,7 +59,6 @@ const Profile = () => {
     }
   };
 
-  /** Refresh on Focus */
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
@@ -71,7 +67,6 @@ const Profile = () => {
     }, [])
   );
 
-  /** Delete a post */
   const handleDeletePost = async (postId) => {
     try {
       await deleteDoc(doc(db, "itemsForSale", postId));
@@ -82,7 +77,6 @@ const Profile = () => {
     }
   };
 
-  /** Render Post Card */
   const renderPost = ({ item }) => (
     <View style={styles.postCard}>
       {item.imageBase64 ? (

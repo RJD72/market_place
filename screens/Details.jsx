@@ -26,7 +26,6 @@ const Details = ({ route }) => {
   const navigation = useNavigation();
   const [isOwner, setIsOwner] = useState(false);
 
-  // Check if logged-in user is the owner
   useEffect(() => {
     const user = auth.currentUser;
     if (user && item.userId === user.uid) {
@@ -34,7 +33,6 @@ const Details = ({ route }) => {
     }
   }, []);
 
-  /** ✅ Handle all possible image cases */
   let images = [];
 
   if (item.images && Array.isArray(item.images) && item.images.length > 0) {
@@ -45,7 +43,6 @@ const Details = ({ route }) => {
     images = [item.imageBase64];
   }
 
-  /** 📱 Handle Phone Number Click */
   const handlePhoneClick = () => {
     Alert.alert(
       "Contact Seller",
@@ -64,7 +61,6 @@ const Details = ({ route }) => {
     );
   };
 
-  /** 📧 Handle Email Click - Prefill */
   const handleEmailClick = () => {
     const subject = encodeURIComponent(`Interested in: ${item.title}`);
     const body = encodeURIComponent(
@@ -73,14 +69,12 @@ const Details = ({ route }) => {
     Linking.openURL(`mailto:${item.email}?subject=${subject}&body=${body}`);
   };
 
-  /** 🗺️ Handle Address Click - Open Google Maps */
   const handleAddressClick = () => {
     const encodedAddress = encodeURIComponent(item.address);
     const url = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
     Linking.openURL(url);
   };
 
-  /** 🔥 Handle Deletion */
   const handleDelete = async () => {
     Alert.alert("Delete Post", "Are you sure you want to delete this post?", [
       { text: "Cancel", style: "cancel" },
@@ -165,6 +159,9 @@ const Details = ({ route }) => {
 
             {/* Description */}
             <Text className="mt-4 text-gray-700">{item.description}</Text>
+
+            {/* Price */}
+            <Text className="mt-4 text-gray-700 font-bold">${item.price}</Text>
           </View>
 
           {/* Buttons at bottom */}

@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Sell = () => {
   const route = useRoute();
   const navigation = useNavigation();
-  const post = route.params?.post; // Check if editing
+  const post = route.params?.post;
 
   const [user, setUser] = useState(null);
   const [loadingUserData, setLoadingUserData] = useState(true);
@@ -37,7 +37,6 @@ const Sell = () => {
   const [base64Image, setBase64Image] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  /** 🔥 Listen for Auth State and Fetch User Data */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -51,7 +50,6 @@ const Sell = () => {
     return unsubscribe;
   }, []);
 
-  /** 📥 Fetch User Profile Data */
   const fetchUserData = async (currentUser) => {
     try {
       const userRef = doc(db, "users", currentUser.uid);
@@ -76,7 +74,6 @@ const Sell = () => {
     }
   };
 
-  /** Prefill if Editing */
   useEffect(() => {
     if (post) {
       setName(post.name);
@@ -96,7 +93,6 @@ const Sell = () => {
     }
   }, [post]);
 
-  /** 📸 Pick Image from Gallery */
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -112,7 +108,6 @@ const Sell = () => {
     }
   };
 
-  /** 📷 Take Photo with Camera */
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -134,7 +129,6 @@ const Sell = () => {
     }
   };
 
-  /** 📌 Handle Form Submission (Add or Edit) */
   const handleSubmit = async () => {
     if (
       !name ||
@@ -174,24 +168,20 @@ const Sell = () => {
       };
 
       if (post) {
-        // Edit mode
         const postRef = doc(db, "itemsForSale", post.id);
         await updateDoc(postRef, newItem);
         Alert.alert("Success", "Post updated!");
       } else {
-        // Add mode
         await addDoc(collection(db, "itemsForSale"), newItem);
         Alert.alert("Success", "Item listed for sale!");
       }
 
-      /** ✅ CLEAR FIELDS */
       setTitle("");
       setDescription("");
       setPrice("");
       setImageUri(null);
       setBase64Image(null);
 
-      /** ✅ Reset navigation stack to remove old params */
       navigation.reset({
         index: 0,
         routes: [{ name: "Profile" }],

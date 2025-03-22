@@ -9,7 +9,6 @@ const Home = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch items in real-time
   useEffect(() => {
     const unsubscribe = onSnapshot(
       collection(db, "itemsForSale"),
@@ -23,7 +22,7 @@ const Home = () => {
       }
     );
 
-    return unsubscribe; // Clean up listener
+    return unsubscribe;
   }, []);
 
   return (
